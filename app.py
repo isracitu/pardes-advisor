@@ -8,7 +8,6 @@ from datetime import datetime
 from data_general import PESTS_GENERAL, PRODUCTS_GENERAL
 from data_shoham import PESTS_SHOHAM, PRODUCTS_SHOHAM, SHOHAM_RULES
 from data_labels import PRODUCT_LABELS
-from data_fruit_size import FRUIT_SIZE_DATA, format_size_recommendation
 
 app = Flask(__name__)
 CORS(app)
@@ -151,23 +150,25 @@ def chat():
 
 @app.route("/api/fruit-size", methods=["POST"])
 def get_fruit_size():
-    """Get fruit size recommendation for a variety"""
+    """Get fruit size recommendation with monthly tables"""
     try:
+        from data_fruit_size import get_fruit_size_recommendation, get_all_varieties
+        
         data = request.json
         variety = data.get("variety", "").strip()
         current_size = data.get("current_size_mm")
         
         if not variety:
             # Return list of all varieties
-            varieties = list(FRUIT_SIZE_DATA.keys())
+            varieties = get_all_varieties()
             return jsonify({"varieties": varieties})
         
-        # Get recommendation
-        recommendation = format_size_recommendation(variety, current_size)
+        # Get smart recommendation with today's date
+        result = get_fruit_size_recommendation(variety, current_size)
         
         return jsonify({
             "variety": variety,
-            "recommendation": recommendation,
+            "recommendation": result.get("recommendation", ""),
             "timestamp": datetime.now().isoformat()
         })
     

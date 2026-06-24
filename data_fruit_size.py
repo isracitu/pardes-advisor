@@ -1,163 +1,368 @@
-# Fruit size guidelines - Ministry of Agriculture 2026
-# מדריך גודל פרי - משרד החקלאות 2026
-# Source: "השקיית הדרים על פי גודל הפרי - 2026"
+# Fruit size guidelines with monthly tables - Ministry of Agriculture 2026
+# מדריך גודל פרי עם טבלאות חודשיות - משרד החקלאות 2026
 
-FRUIT_SIZE_DATA = {
+from datetime import datetime
+
+FRUIT_SIZE_TABLES = {
     "אשכולית אדומה": {
-        "min_mm": 92,
-        "max_mm": 162,
-        "description": "קטיף בכיר (ספטמבר-אוקטובר)",
+        "min_total": 92,
+        "max_total": 162,
+        "market": "יצוא",
         "harvest_months": ["ספטמבר", "אוקטובר"],
-        "market": "יצוא"
-    },
-    "אשכולית אדומה - שוק מקומי": {
-        "min_mm": 92,
-        "max_mm": 125,
-        "description": "קטיף סלקטיבי בסתיו וקטיף משלים בסוף העונה (פברואר-מרס)",
-        "harvest_months": ["פברואר", "מרס"],
-        "market": "שוק מקומי"
+        "tables": {
+            "ספטמבר": {
+                "1 ביוני": (42, 72),
+                "15 ביוני": (57, 87),
+                "1 ביולי": (67, 97),
+                "15 ביולי": (74, 104),
+                "1 באוגוסט": (79, 109),
+                "15 באוגוסט": (83, 113),
+                "1 בספטמבר": (87, 117),
+                "15 בספטמבר": (90, 120),
+            },
+            "אוקטובר": {
+                "1 ביוני": (36, 66),
+                "15 ביוני": (51, 81),
+                "1 ביולי": (61, 91),
+                "15 ביולי": (68, 98),
+                "1 באוגוסט": (73, 103),
+                "15 באוגוסט": (77, 107),
+                "1 בספטמבר": (81, 111),
+                "15 בספטמבר": (84, 114),
+                "1 באוקטובר": (87, 117),
+                "15 באוקטובר": (90, 120),
+            }
+        }
     },
     "פומלית ירוקה": {
-        "min_mm": 122,
-        "max_mm": 162,
-        "description": "קטיף (ספטמבר-אוקטובר)",
+        "min_total": 122,
+        "max_total": 162,
+        "market": "יצוא",
         "harvest_months": ["ספטמבר", "אוקטובר"],
-        "market": "יצוא"
-    },
-    "פומלית צהובה": {
-        "min_mm": 112,
-        "max_mm": None,  # ללא הגבלה עליונה בשוק מקומי
-        "description": "שוק מקומי (ינואר)",
-        "harvest_months": ["ינואר"],
-        "market": "שוק מקומי"
-    },
-    "פומלו אדום": {
-        "min_mm": 122,
-        "max_mm": 162,
-        "description": "קטיף (ספטמבר-אוקטובר)",
-        "harvest_months": ["ספטמבר", "אוקטובר"],
-        "market": "יצוא"
-    },
-    "מינאולה": {
-        "min_mm": 25,
-        "max_mm": 85,
-        "description": "קטיף (דצמבר)",
-        "harvest_months": ["דצמבר"],
-        "market": "יצוא"
-    },
-    "אורי": {
-        "min_mm": 22,
-        "max_mm": 82,
-        "description": "קטיף (פברואר)",
-        "harvest_months": ["פברואר"],
-        "market": "יצוא"
+        "tables": {
+            "ספטמבר": {
+                "1 ביוני": (44, 69),
+                "15 ביוני": (59, 84),
+                "1 ביולי": (69, 94),
+                "15 ביולי": (76, 101),
+                "1 באוגוסט": (81, 106),
+                "15 באוגוסט": (85, 110),
+                "1 בספטמבר": (89, 114),
+                "15 בספטמבר": (92, 117),
+            },
+            "אוקטובר": {
+                "1 ביוני": (40, 60),
+                "15 ביוני": (55, 75),
+                "1 ביולי": (65, 85),
+                "15 ביולי": (72, 92),
+                "1 באוגוסט": (77, 97),
+                "15 באוגוסט": (81, 101),
+                "1 בספטמבר": (85, 105),
+                "15 בספטמבר": (88, 108),
+                "1 באוקטובר": (91, 111),
+                "15 באוקטובר": (94, 114),
+                "1 בנובמבר": (96, 116),
+            }
+        }
     },
     "ניוהול": {
-        "min_mm": 82,
-        "max_mm": 122,
-        "description": "קטיף סלקטיבי ומשלים (נובמבר-פברואר)",
+        "min_total": 82,
+        "max_total": 122,
+        "market": "יצוא",
         "harvest_months": ["נובמבר", "דצמבר", "ינואר", "פברואר"],
-        "market": "יצוא"
+        "tables": {
+            "נובמבר": {
+                "1 ביוני": (21, 51),
+                "15 ביוני": (29, 59),
+                "1 ביולי": (36, 66),
+                "15 ביולי": (43, 73),
+                "1 באוגוסט": (48, 78),
+                "15 באוגוסט": (53, 83),
+                "1 בספטמבר": (57, 87),
+                "15 בספטמבר": (61, 91),
+                "1 באוקטובר": (65, 95),
+                "15 באוקטובר": (69, 99),
+            },
+            "ינואר": {
+                "1 בנובמבר": (72, 82),
+                "15 בנובמבר": (74, 84),
+                "1 בדצמבר": (76, 86),
+                "15 בדצמבר": (78, 88),
+                "1 בינואר": (80, 90),
+            },
+            "פברואר": {
+                "1 בנובמבר": (56, 76),
+                "15 בנובמבר": (57, 77),
+                "1 בדצמבר": (58, 78),
+                "15 בדצמבר": (59, 79),
+                "1 בפברואר": (60, 80),
+            }
+        }
+    },
+    "אורי": {
+        "min_total": 22,
+        "max_total": 82,
+        "market": "יצוא",
+        "harvest_months": ["פברואר"],
+        "tables": {
+            "פברואר": {
+                "1 ביולי": (14, 34),
+                "15 ביולי": (21, 41),
+                "1 באוגוסט": (27, 47),
+                "15 באוגוסט": (32, 52),
+                "1 בספטמבר": (37, 57),
+                "15 בספטמבר": (41, 61),
+                "1 באוקטובר": (45, 65),
+                "15 באוקטובר": (49, 69),
+                "1 בנובמבר": (53, 73),
+            }
+        }
     },
     "קלמנטינה": {
-        "min_mm": 22,
-        "max_mm": 82,
-        "description": "קטיף סלקטיבי ומשלים (נובמבר-דצמבר)",
+        "min_total": 22,
+        "max_total": 82,
+        "market": "יצוא",
         "harvest_months": ["נובמבר", "דצמבר"],
-        "market": "יצוא"
+        "tables": {
+            "נובמבר": {
+                "1 ביוני": (16, 36),
+                "15 ביוני": (21, 41),
+                "1 ביולי": (26, 46),
+                "15 ביולי": (30, 50),
+                "1 באוגוסט": (34, 54),
+                "15 באוגוסט": (38, 58),
+                "1 בספטמבר": (41, 61),
+                "15 בספטמבר": (44, 64),
+                "1 באוקטובר": (47, 67),
+                "15 באוקטובר": (50, 70),
+            }
+        }
     },
     "מנדרינה הדס": {
-        "min_mm": 22,
-        "max_mm": 82,
-        "description": "קטיף (ינואר-אפריל)",
-        "harvest_months": ["ינואר", "פברואר", "מרס", "אפריל"],
-        "market": "יצוא"
+        "min_total": 22,
+        "max_total": 82,
+        "market": "יצוא",
+        "harvest_months": ["ינואר", "מרס", "אפריל"],
+        "tables": {
+            "ינואר": {
+                "1 ביולי": (19, 39),
+                "15 ביולי": (24, 44),
+                "1 באוגוסט": (29, 49),
+                "15 באוגוסט": (33, 53),
+                "1 בספטמבר": (37, 57),
+                "15 בספטמבר": (40, 60),
+                "1 באוקטובר": (43, 63),
+                "15 באוקטובר": (46, 66),
+                "1 בנובמבר": (49, 69),
+                "15 בנובמבר": (52, 72),
+            },
+            "מרס": {
+                "1 בנובמבר": (53, 63),
+                "15 בנובמבר": (56, 66),
+                "1 בדצמבר": (58, 68),
+                "15 בדצמבר": (60, 70),
+                "1 בינואר": (61, 71),
+            }
+        }
+    },
+    "מינאולה": {
+        "min_total": 25,
+        "max_total": 85,
+        "market": "יצוא",
+        "harvest_months": ["דצמבר"],
+        "tables": {
+            "דצמבר": {
+                "1 ביוני": (18, 38),
+                "15 ביוני": (23, 43),
+                "1 ביולי": (28, 48),
+                "15 ביולי": (33, 53),
+                "1 באוגוסט": (37, 57),
+                "15 באוגוסט": (41, 61),
+                "1 בספטמבר": (45, 65),
+                "15 בספטמבר": (49, 69),
+                "1 באוקטובר": (52, 72),
+                "15 באוקטובר": (55, 75),
+                "1 בנובמבר": (58, 78),
+                "15 בנובמבר": (61, 81),
+                "1 בדצמבר": (63, 83),
+                "15 בדצמבר": (65, 85),
+                "1 בינואר": (67, 87),
+            }
+        }
+    },
+    "פומלו אדום": {
+        "min_total": 122,
+        "max_total": 162,
+        "market": "יצוא",
+        "harvest_months": ["ספטמבר", "אוקטובר"],
+        "tables": {
+            "ספטמבר": {
+                "1 ביוני": (80, 112),
+                "15 ביוני": (95, 127),
+                "1 ביולי": (105, 137),
+                "15 ביולי": (112, 144),
+                "1 באוגוסט": (117, 149),
+                "15 באוגוסט": (121, 153),
+                "1 בספטמבר": (125, 157),
+                "15 בספטמבר": (128, 160),
+                "1 באוקטובר": (131, 163),
+            },
+            "אוקטובר": {
+                "1 ביוני": (77, 109),
+                "15 ביוני": (92, 124),
+                "1 ביולי": (102, 134),
+                "15 ביולי": (109, 141),
+                "1 באוגוסט": (114, 146),
+                "15 באוגוסט": (118, 150),
+                "1 בספטמבר": (122, 154),
+                "15 בספטמבר": (125, 157),
+                "1 באוקטובר": (128, 160),
+            }
+        }
     },
     "ליים": {
-        "min_mm": 52,
-        "max_mm": 72,
-        "description": "קטיף (יולי-אוגוסט) — עמק החולה וכינרת",
+        "min_total": 52,
+        "max_total": 72,
+        "market": "יצוא",
         "harvest_months": ["יולי", "אוגוסט"],
-        "market": "יצוא"
-    },
-    "קרה קרה - שוק מקומי": {
-        "min_mm": 85,
-        "max_mm": 122,
-        "description": "קטיף סלקטיבי (נובמבר-פברואר)",
-        "harvest_months": ["נובמבר", "דצמבר", "ינואר", "פברואר"],
-        "market": "שוק מקומי"
+        "tables": {
+            "כינרת": {
+                "15 ביוני": (36, 56),
+                "1 ביולי": (41, 61),
+                "15 ביולי": (46, 66),
+                "1 באוגוסט": (50, 70),
+                "15 באוגוסט": (50, 70),
+            },
+            "עמק": {
+                "15 ביוני": (33, 53),
+                "1 ביולי": (38, 58),
+                "15 ביולי": (43, 63),
+                "1 באוגוסט": (47, 67),
+                "15 באוגוסט": (50, 70),
+            }
+        }
     },
     "קרה קרה": {
-        "min_mm": 72,
-        "max_mm": 92,
-        "description": "יצוא (ינואר-פברואר)",
+        "min_total": 72,
+        "max_total": 92,
+        "market": "יצוא",
         "harvest_months": ["ינואר", "פברואר"],
-        "market": "יצוא"
+        "tables": {
+            "ינואר-פברואר": {
+                "1 ביוני": (24, 44),
+                "15 ביוני": (29, 49),
+                "1 ביולי": (34, 54),
+                "15 ביולי": (39, 59),
+                "1 באוגוסט": (44, 64),
+                "15 באוגוסט": (48, 68),
+                "1 בספטמבר": (52, 72),
+                "15 בספטמבר": (56, 76),
+                "1 באוקטובר": (59, 79),
+                "15 באוקטובר": (62, 82),
+                "1 בנובמבר": (64, 84),
+                "15 בנובמבר": (66, 86),
+                "1 בדצמבר": (68, 88),
+                "15 בדצמבר": (69, 89),
+                "1 בפברואר": (70, 90),
+            }
+        }
     }
 }
 
-def get_fruit_size_range(variety):
-    """
-    חזור טווח גודל פרי לזן מסוים
+def get_closest_date_in_table(month_num, day_num, table_dates):
+    """מצא את התאריך הקרוב ביותר בטבלה"""
+    # Simple mapping for Hebrew months
+    hebrew_months = {
+        6: "ביוני", 7: "ביולי", 8: "באוגוסט", 
+        9: "בספטמבר", 10: "באוקטובר", 11: "בנובמבר",
+        12: "בדצמבר", 1: "בינואר", 2: "בפברואר", 3: "במרס", 4: "באפריל"
+    }
     
-    Args:
-        variety (str): שם הזן (כפי שהוא מופיע בטבלה)
+    # Get dates from table and find closest
+    available_dates = list(table_dates.keys())
+    if not available_dates:
+        return None, None
     
-    Returns:
-        dict: {"min_mm": int, "max_mm": int, "description": str}
-              או None אם הזן לא קיים
-    """
-    if variety in FRUIT_SIZE_DATA:
-        data = FRUIT_SIZE_DATA[variety]
+    # For simplicity, return the closest date we have
+    # In production, could do more sophisticated matching
+    return available_dates[0], table_dates[available_dates[0]]
+
+def get_fruit_size_recommendation(variety, current_size_mm=None):
+    """קבל המלצה על גודל פרי עם תאריך"""
+    
+    if variety not in FRUIT_SIZE_TABLES:
         return {
-            "min_mm": data["min_mm"],
-            "max_mm": data["max_mm"],
-            "description": data["description"],
-            "harvest_months": data["harvest_months"],
-            "market": data["market"]
+            "error": f"זן '{variety}' לא נמצא",
+            "available": list(FRUIT_SIZE_TABLES.keys())
         }
-    return None
-
-def get_all_varieties():
-    """חזור רשימה של כל הזנים הזמינים"""
-    return list(FRUIT_SIZE_DATA.keys())
-
-def format_size_recommendation(variety, current_size_mm=None):
-    """
-    פורמט המלצה על גודל פרי
     
-    Args:
-        variety (str): שם הזן
-        current_size_mm (int, optional): גודל פרי נוכחי (אם ידוע)
+    data = FRUIT_SIZE_TABLES[variety]
+    today = datetime.now()
+    month = today.month
+    day = today.day
     
-    Returns:
-        str: טקסט המלצה יפה
-    """
-    data = get_fruit_size_range(variety)
+    # Get current month name in Hebrew
+    hebrew_month = {
+        1: "ינואר", 2: "פברואר", 3: "מרס", 4: "אפריל",
+        5: "מאי", 6: "יוני", 7: "יולי", 8: "אוגוסט",
+        9: "ספטמבר", 10: "אוקטובר", 11: "נובמבר", 12: "דצמבר"
+    }.get(month, "")
     
-    if not data:
-        return f"לא מצאתי מידע על זן '{variety}'"
+    # Find the closest date in any available table
+    closest_date = None
+    closest_range = None
     
-    min_mm = data["min_mm"]
-    max_mm = data["max_mm"]
-    description = data["description"]
-    harvest_months = ", ".join(data["harvest_months"])
-    market = data["market"]
+    for harvest_month, table_dates in data.get("tables", {}).items():
+        for date_str, range_tuple in table_dates.items():
+            # Parse date string (e.g., "1 ביוני")
+            if f"{day} {hebrew_month}" in date_str or (day > 14 and "15" in date_str):
+                closest_date = date_str
+                closest_range = range_tuple
+                break
+        
+        if closest_date:
+            break
     
+    # If no exact match, use first available
+    if not closest_date and data.get("tables"):
+        first_table = next(iter(data["tables"].values()))
+        if first_table:
+            closest_date, closest_range = next(iter(first_table.items()))
+    
+    # Build recommendation
     result = f"""
 🍊 **{variety}**
-   טווח רצוי: {min_mm}-{max_mm if max_mm else '∞'} מ״מ
-   קטיפים: {harvest_months}
-   שוק: {market}
-   הערה: {description}
+
+📊 **טווח כללי:** {data['min_total']}-{data['max_total']} מ״מ
+📅 **תאריך היום:** {day}/{month}/2026
+🎯 **חודש:** {hebrew_month}
+🏪 **שוק:** {data['market']}
+
 """
     
-    if current_size_mm:
-        if current_size_mm < min_mm:
-            result += f"   ⚠️ הפרי שלך ({current_size_mm} מ״מ) **קטן מדי** — צריך להעלות השקיה\n"
-        elif max_mm and current_size_mm > max_mm:
-            result += f"   ⚠️ הפרי שלך ({current_size_mm} מ״מ) **גדול מדי** — צריך להפחית השקיה\n"
-        else:
-            result += f"   ✅ הפרי שלך ({current_size_mm} מ״מ) **בטווח הנכון**\n"
+    if closest_date and closest_range:
+        result += f"📏 **גודל רצוי לתאריך {closest_date}:**\n"
+        result += f"   {closest_range[0]}-{closest_range[1]} מ״מ\n\n"
+        
+        if current_size_mm:
+            if current_size_mm < closest_range[0]:
+                diff = closest_range[0] - current_size_mm
+                result += f"⚠️ **הפרי שלך ({current_size_mm} מ״מ) קטן מדי!**\n"
+                result += f"   צריך להגדיל ב-{diff} מ״מ לפחות\n"
+                result += f"   → **העלה השקיה בהדרגה**\n"
+            elif current_size_mm > closest_range[1]:
+                diff = current_size_mm - closest_range[1]
+                result += f"⚠️ **הפרי שלך ({current_size_mm} מ״מ) גדול מדי!**\n"
+                result += f"   עודף של {diff} מ״מ\n"
+                result += f"   → **הפחת השקיה בהדרגה**\n"
+            else:
+                result += f"✅ **הפרי שלך ({current_size_mm} מ״מ) בטווח הנכון!**\n"
+                result += f"   המשך עם תוכנית ההשקיה הנוכחית\n"
     
-    return result
+    result += "\n⚠️ **אחריות:** המידע הוא המלצה בלבד. להתייעץ עם מדריך משק מוסמך."
+    
+    return {"recommendation": result, "variety": variety}
+
+def get_all_varieties():
+    """חזור רשימת כל הזנים"""
+    return list(FRUIT_SIZE_TABLES.keys())

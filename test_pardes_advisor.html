@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍊 בדיקת עוזרת הפרדס</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Arial', Helvetica, sans-serif;
+            background: linear-gradient(135deg, #f4a460 0%, #ff8c00 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #ff8c00;
+            margin-bottom: 15px;
+            font-size: 2.8em;
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        
+        h2 {
+            color: #333;
+            font-size: 1.7em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 35px;
+            border-bottom: 3px solid #efefef;
+            flex-wrap: wrap;
+            padding-bottom: 15px;
+        }
+        
+        .tab-btn {
+            padding: 15px 26px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #666;
+            transition: all 0.3s;
+            letter-spacing: 0.4px;
+        }
+        
+        .tab-btn:hover {
+            background: #efefef;
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background: #ff8c00;
+            color: white;
+            border-bottom: 4px solid #ff6600;
+            box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 12px;
+            color: #333;
+            font-weight: 700;
+            font-size: 1.15em;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 18px 16px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-family: inherit;
+            direction: rtl;
+            margin-bottom: 22px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #ff8c00;
+            outline: none;
+            box-shadow: 0 0 10px rgba(255,140,0,0.4);
+            background: #fffbf5;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #ff8c00 0%, #ff6600 100%);
+            color: white;
+            padding: 18px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.25em;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 20px rgba(255,140,0,0.3);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #ff6600 0%, #ff5500 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,140,0,0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .result {
+            background: #f9f9f9;
+            border-right: 5px solid #ff8c00;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1.08em;
+            max-height: 450px;
+            overflow-y: auto;
+            direction: rtl;
+            text-align: right;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .result.error {
+            border-right-color: #d32f2f;
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .result.success {
+            border-right-color: #4caf50;
+            background: #f1f8e9;
+            color: #2e7d32;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #ff8c00;
+            font-weight: 700;
+            font-size: 1.1em;
+            padding: 20px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 1.08em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .status.ok {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .status.error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        
+        .varieties-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .variety-tag {
+            background: #fff3e0;
+            padding: 18px;
+            border-radius: 10px;
+            border-right: 4px solid #ff8c00;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.05em;
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .variety-tag:hover {
+            background: #ffe0b2;
+            transform: translateX(-5px);
+            box-shadow: 0 4px 15px rgba(255,140,0,0.2);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .varieties-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .info-text {
+            color: #666;
+            margin-bottom: 18px;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍊 עוזרת הפרדס</h1>
+        <div class="subtitle">גרסה 4.0 - בדיקת API חכמה</div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('health')">🏥 בדיקה בסיסית</button>
+            <button class="tab-btn" onclick="switchTab('varieties')">🌳 רשימת זנים</button>
+            <button class="tab-btn" onclick="switchTab('fruit-size')">📏 גודל פרי</button>
+            <button class="tab-btn" onclick="switchTab('chat')">💬 צ'אט</button>
+        </div>
+        
+        <!-- TAB 1: Health Check -->
+        <div id="health" class="tab-content active">
+            <div class="section">
+                <h2>🏥 בדיקה בסיסית</h2>
+                <p class="info-text">בדוק אם השרת חי ובעבודה</p>
+                <button onclick="testHealth()">בדוק את השרת</button>
+            </div>
+            <div id="health-result"></div>
+        </div>
+        
+        <!-- TAB 2: Varieties -->
+        <div id="varieties" class="tab-content">
+            <div class="section">
+                <h2>🌳 רשימת זנים</h2>
+                <p class="info-text">קבל את רשימת כל הזנים המתומכים</p>
+                <button onclick="getVarieties()">קבל את הרשימה</button>
+            </div>
+            <div id="varieties-result"></div>
+        </div>
+        
+        <!-- TAB 3: Fruit Size -->
+        <div id="fruit-size" class="tab-content">
+            <div class="section">
+                <h2>📏 גודל פרי</h2>
+                <p class="info-text">בדוק את הגודל הרצוי לזן מסוים עם התאריך של היום</p>
+                
+                <label>בחר זן:</label>
+                <select id="variety-select" onchange="updateVarietyInput()">
+                    <option value="">-- בחר זן --</option>
+                    <option value="אשכולית אדומה">אשכולית אדומה</option>
+                    <option value="פומלית ירוקה">פומלית ירוקה</option>
+                    <option value="פומלו אדום">פומלו אדום</option>
+                    <option value="מינאולה">מינאולה</option>
+                    <option value="אורי">אורי</option>
+                    <option value="ניוהול">ניוהול</option>
+                    <option value="קלמנטינה">קלמנטינה</option>
+                    <option value="מנדרינה הדס">מנדרינה הדס</option>
+                    <option value="ליים">ליים</option>
+                    <option value="קרה קרה">קרה קרה</option>
+                </select>
+                
+                <label>גודל פרי נוכחי (מ״מ) - אופציונלי:</label>
+                <input type="number" id="current-size" placeholder="לדוגמה: 40" min="0" max="200">
+                
+                <button onclick="getFruitSize()">בדוק גודל פרי</button>
+            </div>
+            <div id="fruit-size-result"></div>
+        </div>
+        
+        <!-- TAB 4: Chat -->
+        <div id="chat" class="tab-content">
+            <div class="section">
+                <h2>💬 צ'אט עם העוזרת</h2>
+                <p class="info-text">שאל שאלה על חומרים או מזיקים</p>
+                
+                <label>סוג משתמש:</label>
+                <select id="mode-select">
+                    <option value="false">רשימה כללית (משרד החקלאות)</option>
+                    <option value="true">שוהם (מנדרינה אורי)</option>
+                </select>
+                
+                <label>שאלתך:</label>
+                <textarea id="chat-message" placeholder="לדוגמה: יש לי זבוב בפרי שלי, מה עושים?" rows="5"></textarea>
+                
+                <button onclick="sendChat()">שלח שאלה</button>
+            </div>
+            <div id="chat-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://pardes-advisor.onrender.com';
+        
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showResult(elementId, data, isError = false) {
+            const resultDiv = document.getElementById(elementId);
+            let className = isError ? 'result error' : 'result success';
+            resultDiv.innerHTML = `<div class="${className}">${JSON.stringify(data, null, 2)}</div>`;
+        }
+        
+        function showLoading(elementId) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = `<div class="loading">⏳ טוען...</div>`;
+        }
+        
+        async function testHealth() {
+            showLoading('health-result');
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                showResult('health-result', data, !response.ok);
+            } catch (error) {
+                showResult('health-result', { error: error.message }, true);
+            }
+        }
+        
+        async function getVarieties() {
+            showLoading('varieties-result');
+            try {
+                const response = await fetch(`${API_URL}/api/varieties`);
+                const data = await response.json();
+                
+                if (data.varieties) {
+                    let html = '<div style="margin-top: 15px;">';
+                    html += `<div class="status ok">✅ נמצאו ${data.varieties.length} זנים</div>`;
+                    html += '<div class="varieties-list">';
+                    data.varieties.forEach(variety => {
+                        html += `<div class="variety-tag" onclick="copyVariety('${variety}')">${variety}</div>`;
+                    });
+                    html += '</div>';
+                    document.getElementById('varieties-result').innerHTML = html;
+                } else {
+                    showResult('varieties-result', data, true);
+                }
+            } catch (error) {
+                showResult('varieties-result', { error: error.message }, true);
+            }
+        }
+        
+        function copyVariety(variety) {
+            document.getElementById('variety-select').value = variety;
+            document.getElementById('current-size').focus();
+        }
+        
+        function updateVarietyInput() {
+            const selected = document.getElementById('variety-select').value;
+            if (selected) {
+                getFruitSize();
+            }
+        }
+        
+        async function getFruitSize() {
+            const variety = document.getElementById('variety-select').value;
+            const currentSize = document.getElementById('current-size').value;
+            
+            if (!variety) {
+                showResult('fruit-size-result', { error: 'בחר זן קודם כל!' }, true);
+                return;
+            }
+            
+            showLoading('fruit-size-result');
+            
+            try {
+                const body = { variety };
+                if (currentSize) {
+                    body.current_size_mm = parseInt(currentSize);
+                }
+                
+                const response = await fetch(`${API_URL}/api/fruit-size`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.recommendation) {
+                    let html = `<div class="result success">${data.recommendation}</div>`;
+                    document.getElementById('fruit-size-result').innerHTML = html;
+                } else {
+                    showResult('fruit-size-result', data, !response.ok);
+                }
+            } catch (error) {
+                showResult('fruit-size-result', { error: error.message }, true);
+            }
+        }
+        
+        async function sendChat() {
+            const message = document.getElementById('chat-message').value;
+            const isShoham = document.getElementById('mode-select').value === 'true';
+            
+            if (!message) {
+                showResult('chat-result', { error: 'כתוב שאלה קודם!' }, true);
+                return;
+            }
+            
+            showLoading('chat-result');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        session_id: 'web_test_' + Date.now(),
+                        is_shoham: isShoham
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.response) {
+                    let html = `<div class="result success">${data.response}</div>`;
+                    document.getElementById('chat-result').innerHTML = html;
+                } else {
+                    showResult('chat-result', data, !response.ok);
+                }
+            } catch (error) {
+                showResult('chat-result', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>
