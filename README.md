@@ -1,148 +1,224 @@
-# עוזרת הפרדס — Pardes Advisor
+# 🍊 עוזרת הפרדס - מערכת חישוב קוטר פרי ממוצע רצוי
 
-## סקירה כללית
-עוזרת חכמה בעברית לחקלאים בישראל המגדלים הדרים (citrus) ליצוא. השרת מספק המלצות בזמן אמת על חומרים לחסל מזיקים, ממוינות לפי PHI (ימי המתנה לקטיף).
+מערכת מתקדמת לעזור לחקלאי הדרים בישראל בחישוב קוטר פרי ממוצע רצוי בהתאם לתאריך, זן, וסוג קטיף.
 
-## תכונות
-- 🤖 ממשק שיחה טבעי בעברית עם Claude AI
-- 🍊 תמיכה בשני מצבים: **רשימה כללית** (משרד החקלאות) ו-**שוהם אורי** (רשימה מיוחדת)
-- 📋 מיון אוטומטי לפי PHI
-- 🔗 קישורים לתוויות רשמיות (pesticides.moag.gov.il)
-- 📏 חישובי גודל פרי לפי זן ותאריך (11 זנים מטופלים)
-- ⚖️ הצהרות אחריות משפטיות מובנות
+## ✨ תכונות
 
-## Architecture
+✅ **14 זנים שונים** - כל הזנים הזמינים במערכת משרד החקלאות  
+✅ **מדידות מדויקות** - תאריכים וטווחים מ-משרד החקלאות 2026  
+✅ **מדידות קרובות** - מציאת שתי המדידות הקרובות ביותר לתאריך הנוכחי  
+✅ **הערות מיוחדות** - התמודדות עם ליים (שתי אזוריות) וקלמנטינה מיכל  
+✅ **ממשק נוח** - ממשק עברי מתגובב אינטואיטיבי  
+✅ **API ברור** - REST API בעברית ללא תלויות חיצוניות
+
+---
+
+## 📂 מבנה הקבצים
 
 ```
-frontend (Wix HTML widget)
-         ↓
-Flask server (Render free tier)
-  ├── app.py (main server)
-  ├── data_general.py (רשימת משרד החקלאות)
-  ├── data_shoham.py (רשימת שוהם)
-  ├── data_labels.py (מיפוי תוויות)
-  └── data_fruit_size.py (גדלים לפי זן)
-         ↓
-    Claude API (Anthropic)
+pardes-server/
+├── app.py                    # Flask server ראשי
+├── data_fruit_sizes.py      # מבנה נתונים מלא
+├── requirements.txt         # Python dependencies
+├── test_pardes_advisor.html # ממשק HTML
+└── README.md               # קובץ זה
 ```
 
-## API Endpoints
+---
 
-### POST /api/chat
-שאלה ותשובה בסיסית על חומרים.
+## 🚀 התקנה
 
-**Request:**
-```json
-{
-  "message": "יש לי זבוב בפרי שלי, מה עושים?",
-  "session_id": "user_123",
-  "is_shoham": false
-}
-```
+### 1️⃣ דרישות מקדימות
+- Python 3.8+
+- pip (Python package manager)
 
-**Response:**
-```json
-{
-  "response": "המלצות על חומרים...",
-  "session_id": "user_123",
-  "is_shoham": false
-}
-```
-
-### POST /api/fruit-size
-חישוב גודל פרי רצוי.
-
-**Request:**
-```json
-{
-  "variety": "ניוהול",
-  "current_size_mm": 30
-}
-```
-
-**Response:**
-```json
-{
-  "variety": "ניוהול",
-  "recommendation": "טווח רצוי: 82-122 מ״מ. הפרי שלך קטן מדי..."
-}
-```
-
-### GET /api/varieties
-קבל רשימת כל הזנים הזמינים.
-
-### GET /api/health
-בדוק אם השרת כן בחיים.
-
-## Development
-
-### Local Setup
+### 2️⃣ התקן dependencies
 ```bash
-git clone https://github.com/isracitu/pardes-advisor.git
-cd pardes-advisor
-python -m venv venv
-source venv/bin/activate  # Unix/Mac
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY="your-key-here"
+```
+
+### 3️⃣ הרץ את השרת
+```bash
 python app.py
 ```
 
-### Testing
+השרת יפעל ב: `http://localhost:5000`
+
+---
+
+## 🎯 שימוש
+
+### דרך ממשק HTML
+
+1. פתח את `test_pardes_advisor.html` בדפדפן
+2. בחר זן, סוג קטיף, תאריך, וקוטר פרי
+3. לחץ על "חפש"
+4. קבל את המדידות הקרובות והמלצות
+
+### דרך API
+
+#### 1. קבל רשימת זנים
 ```bash
-curl -X POST http://localhost:5000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message":"שלום","is_shoham":false}'
+curl http://localhost:5000/api/varieties
 ```
 
-## Deployment
-
-### Render (Recommended)
-1. קישר את GitHub repository ל-Render
-2. בחר `render.yaml` כמו build config
-3. הוסף `ANTHROPIC_API_KEY` ב-Environment Variables
-4. Deploy!
-
-שרת יהיה זמין ב-`https://pardes-advisor.onrender.com`
-
-## Data Structure
-
-### Fruit Sizes (data_fruit_size.py)
-```python
-FRUIT_SIZE_DATA = {
-    "ניוהול": {
-        "min_mm": 82,
-        "max_mm": 122,
-        "harvest_months": ["נובמבר", "דצמבר", "ינואר", "פברואר"],
-        "market": "יצוא"
-    },
-    ...
+**תשובה:**
+```json
+{
+  "success": true,
+  "varieties": ["אורי", "אשכולית אדומה - קטיף בכיר", ...],
+  "count": 14
 }
 ```
 
-זנים כלולים:
-- אשכולית אדומה
-- פומלית ירוקה / צהובה
-- פומלו
-- מינאולה
-- אורי
-- ניוהול
-- קלמנטינה
-- מנדרינה הדס
-- ליים
-- קרה קרה
+#### 2. קבל סוגי קטיף לזן
+```bash
+curl http://localhost:5000/api/harvests/אורי
+```
 
-## שוהם (Shoham) Mode
+**תשובה:**
+```json
+{
+  "success": true,
+  "variety": "אורי",
+  "desired_range": {"min": 22, "max": 82},
+  "source": "משרד החקלאות",
+  "harvests": ["קטיף פברואר"]
+}
+```
 
-רשימה מיוחדת למנדרינה אורי עם:
-- הגבלות על ספירת חומרים
-- תאריכים מוגבלים
-- דרישות התייעצות עם מדריך משק
-- שוהם קיבלה אישור בעל פה + במייל לשימוש בנתוני הרשימה
+#### 3. קבל המלצות (POST)
+```bash
+curl -X POST http://localhost:5000/api/recommendations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "variety": "אורי",
+    "harvest_type": "קטיף פברואר",
+    "current_date": "2026-06-24",
+    "current_diameter": 30
+  }'
+```
 
-## License
-רק לשימוש על ידי ארגון מגדלי ההדרים בישראל ובעלים מורשים.
+**תשובה:**
+```json
+{
+  "success": true,
+  "variety": "אורי",
+  "harvest_type": "קטיף פברואר",
+  "current_date": "2026-06-24",
+  "current_diameter": 30,
+  "desired_range": {"min": 22, "max": 82},
+  "closest_measurements": {
+    "before": {
+      "date": "2026-06-15",
+      "range": {"min": 21, "max": 41}
+    },
+    "after": {
+      "date": "2026-07-01",
+      "range": {"min": 27, "max": 47}
+    }
+  },
+  "diameter_status": {
+    "in_range": false,
+    "status": "❌ קטן מדי - צריך להגביר השקיה"
+  }
+}
+```
 
-## Contact
-Daniel Klusky
-Israeli Citrus Growers Organization
-קישור: www.hapardes.com
+---
+
+## 🌳 הערות מיוחדות
+
+### ליים - שתי אזוריות
+- **אזור 1**: כינרת + בית שאן (אמצע יולי)
+- **אזור 2**: עמק החולה (סוף יולי + אוגוסט)
+
+כל אזור יש טווח שונה. בחר לפי אזור הגידול שלך.
+
+### קלמנטינה מיכל
+נתונים זמינים עד קטיף נובמבר בלבד.  
+לתקופות מאוחרות יותר - התייעץ עם מומחה.
+
+---
+
+## 🔧 דפלוימנט ל-Render
+
+### 1. הכן את הקבצים
+```bash
+# צור תיקייה
+mkdir pardes-server
+cd pardes-server
+
+# העתק את הקבצים
+cp app.py data_fruit_sizes.py requirements.txt .
+```
+
+### 2. צור Procfile
+```bash
+cat > Procfile << EOF
+web: gunicorn app:app
+EOF
+```
+
+### 3. דחוף ל-GitHub
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git push origin main
+```
+
+### 4. הצע ל-Render
+
+1. התחבר ל- [render.com](https://render.com)
+2. New → Web Service
+3. חבר את ה-GitHub repo
+4. הגדר:
+   - **Start Command**: `gunicorn app:app`
+   - **Port**: 5000
+
+---
+
+## 📊 13 זנים זמינים
+
+1. אורי
+2. אשכולית אדומה - קטיף בכיר
+3. אשכולית אדומה - קטיף סלקטיבי
+4. טבורי ניוהול
+5. טבורי קרה קרה - שוק מקומי
+6. טבורי קרה קרה - יצוא
+7. קלמנטינה מיכל
+8. ליים
+9. מינאואלה
+10. מנדרינה הדס
+11. פומלה אדום
+12. פומלית ירוקה
+13. פומלית צהובה - שוק מקומי
+
+---
+
+## ⚖️ כתב הצהרת
+
+**⚠️ הערה משפטית חשובה:**
+
+המידע בעוזרת זו הוא המלצה בלבד.  
+המשתמש נושא את **האחריות המלאה** לגבי החלטותיו בנוגע להשקיה וקטיף.
+
+יש להתייעץ עם מומחה לאישור הנתונים לתנאים הספציפיים של החלקה שלך.
+
+---
+
+## 📞 תמיכה
+
+נתונים מקור:  
+📄 משרד החקלאות ופיתוח הכפר  
+🏢 שירות ההדרכה והמקצוע  
+📍 אגף הפירות, תחום הדרים
+
+---
+
+## 📝 ניסוח
+
+*עוזרת הפרדס* - מערכת עזר לחקלאים בחישוב קוטר פרי ממוצע רצוי  
+גרסה: 5.0 (מלא נתונים)  
+תאריך: יוני 2026

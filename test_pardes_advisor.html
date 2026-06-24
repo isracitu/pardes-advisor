@@ -3,486 +3,569 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍊 בדיקת עוזרת הפרדס</title>
+    <title>עוזרת הפרדס - קוטר פרי ממוצע רצוי</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', 'Arial', Helvetica, sans-serif;
-            background: linear-gradient(135deg, #f4a460 0%, #ff8c00 100%);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
             direction: rtl;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .card {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
-        }
-        
-        h1 {
-            color: #ff8c00;
-            margin-bottom: 15px;
-            font-size: 2.8em;
-            text-align: center;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-        
-        h2 {
-            color: #333;
-            font-size: 1.7em;
+            border-radius: 15px;
+            padding: 30px;
             margin-bottom: 20px;
-            font-weight: 700;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 35px;
-            font-size: 1.2em;
-            font-weight: 500;
+
+        .form-group {
+            margin-bottom: 20px;
         }
-        
-        .tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 35px;
-            border-bottom: 3px solid #efefef;
-            flex-wrap: wrap;
-            padding-bottom: 15px;
-        }
-        
-        .tab-btn {
-            padding: 15px 26px;
-            background: #f5f5f5;
-            border: none;
-            border-radius: 12px 12px 0 0;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 700;
-            color: #666;
-            transition: all 0.3s;
-            letter-spacing: 0.4px;
-        }
-        
-        .tab-btn:hover {
-            background: #efefef;
-            transform: translateY(-2px);
-        }
-        
-        .tab-btn.active {
-            background: #ff8c00;
-            color: white;
-            border-bottom: 4px solid #ff6600;
-            box-shadow: 0 4px 12px rgba(255,140,0,0.3);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
+
+        .form-group label {
             display: block;
-            animation: fadeIn 0.3s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .section {
-            margin-bottom: 25px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: #333;
-            font-weight: 700;
-            font-size: 1.15em;
+            font-size: 16px;
         }
-        
-        input, select, textarea {
+
+        .form-group select,
+        .form-group input {
             width: 100%;
-            padding: 18px 16px;
-            border: 3px solid #ddd;
-            border-radius: 12px;
-            font-size: 1.1em;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
             font-family: inherit;
-            direction: rtl;
-            margin-bottom: 22px;
-            letter-spacing: 0.5px;
-            transition: all 0.3s;
         }
-        
-        input:focus, select:focus, textarea:focus {
-            border-color: #ff8c00;
+
+        .form-group select:focus,
+        .form-group input:focus {
             outline: none;
-            box-shadow: 0 0 10px rgba(255,140,0,0.4);
-            background: #fffbf5;
+            border-color: #667eea;
+            background-color: #f8f9ff;
         }
-        
-        button {
-            background: linear-gradient(135deg, #ff8c00 0%, #ff6600 100%);
-            color: white;
-            padding: 18px 30px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.25em;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            letter-spacing: 0.5px;
-            box-shadow: 0 6px 20px rgba(255,140,0,0.3);
-        }
-        
-        button:hover {
-            background: linear-gradient(135deg, #ff6600 0%, #ff5500 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255,140,0,0.4);
-        }
-        
-        button:active {
-            transform: translateY(-1px);
-        }
-        
-        .result {
-            background: #f9f9f9;
-            border-right: 5px solid #ff8c00;
-            padding: 25px;
-            border-radius: 12px;
-            margin-top: 25px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 1.08em;
-            max-height: 450px;
-            overflow-y: auto;
-            direction: rtl;
-            text-align: right;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.8;
-            color: #333;
-        }
-        
-        .result.error {
-            border-right-color: #d32f2f;
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .result.success {
-            border-right-color: #4caf50;
-            background: #f1f8e9;
-            color: #2e7d32;
-        }
-        
-        .loading {
-            text-align: center;
-            color: #ff8c00;
-            font-weight: 700;
-            font-size: 1.1em;
-            padding: 20px;
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-size: 1.08em;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        
-        .status.ok {
-            background: #c8e6c9;
-            color: #2e7d32;
-        }
-        
-        .status.error {
-            background: #ffcdd2;
-            color: #c62828;
-        }
-        
-        .varieties-list {
+
+        .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 15px;
+            gap: 15px;
         }
-        
-        .variety-tag {
-            background: #fff3e0;
-            padding: 18px;
-            border-radius: 10px;
-            border-right: 4px solid #ff8c00;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1.05em;
-            font-weight: 600;
-            text-align: right;
-        }
-        
-        .variety-tag:hover {
-            background: #ffe0b2;
-            transform: translateX(-5px);
-            box-shadow: 0 4px 15px rgba(255,140,0,0.2);
-        }
-        
+
         @media (max-width: 600px) {
-            .container {
-                padding: 25px;
-            }
-            
-            h1 {
-                font-size: 2.2em;
-            }
-            
-            .varieties-list {
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
-        
-        .info-text {
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-box {
+            background: #f8f9ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .desired-range {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .desired-range h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .range-display {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .measurements-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .measurements-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .measurement-card {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .measurement-card.before {
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .measurement-card.after {
+            border-left: 5px solid #51cf66;
+        }
+
+        .measurement-date {
+            font-size: 14px;
             color: #666;
-            margin-bottom: 18px;
-            font-size: 1.1em;
-            line-height: 1.7;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .measurement-range {
+            font-size: 22px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+
+        .measurement-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .status-good {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-bad {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .notes {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .notes p {
+            color: #1565c0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .notes p:last-child {
+            margin-bottom: 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 15px;
+        }
+
+        .source {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .disclaimer {
+            background: #fff9e6;
+            border: 1px solid #ffe066;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #856404;
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .variety-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🍊 עוזרת הפרדס</h1>
-        <div class="subtitle">גרסה 4.0 - בדיקת API חכמה</div>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('health')">🏥 בדיקה בסיסית</button>
-            <button class="tab-btn" onclick="switchTab('varieties')">🌳 רשימת זנים</button>
-            <button class="tab-btn" onclick="switchTab('fruit-size')">📏 גודל פרי</button>
-            <button class="tab-btn" onclick="switchTab('chat')">💬 צ'אט</button>
+        <div class="header">
+            <h1>🍊 עוזרת הפרדס</h1>
+            <p>חישוב קוטר פרי ממוצע רצוי</p>
         </div>
-        
-        <!-- TAB 1: Health Check -->
-        <div id="health" class="tab-content active">
-            <div class="section">
-                <h2>🏥 בדיקה בסיסית</h2>
-                <p class="info-text">בדוק אם השרת חי ובעבודה</p>
-                <button onclick="testHealth()">בדוק את השרת</button>
-            </div>
-            <div id="health-result"></div>
-        </div>
-        
-        <!-- TAB 2: Varieties -->
-        <div id="varieties" class="tab-content">
-            <div class="section">
-                <h2>🌳 רשימת זנים</h2>
-                <p class="info-text">קבל את רשימת כל הזנים המתומכים</p>
-                <button onclick="getVarieties()">קבל את הרשימה</button>
-            </div>
-            <div id="varieties-result"></div>
-        </div>
-        
-        <!-- TAB 3: Fruit Size -->
-        <div id="fruit-size" class="tab-content">
-            <div class="section">
-                <h2>📏 גודל פרי</h2>
-                <p class="info-text">בדוק את הגודל הרצוי לזן מסוים עם התאריך של היום</p>
-                
-                <label>בחר זן:</label>
-                <select id="variety-select" onchange="updateVarietyInput()">
+
+        <div class="card">
+            <div class="form-group">
+                <label for="variety">בחר זן:</label>
+                <select id="variety" onchange="onVarietyChange()">
                     <option value="">-- בחר זן --</option>
-                    <option value="אשכולית אדומה">אשכולית אדומה</option>
-                    <option value="פומלית ירוקה">פומלית ירוקה</option>
-                    <option value="פומלו אדום">פומלו אדום</option>
-                    <option value="מינאולה">מינאולה</option>
-                    <option value="אורי">אורי</option>
-                    <option value="ניוהול">ניוהול</option>
-                    <option value="קלמנטינה">קלמנטינה</option>
-                    <option value="מנדרינה הדס">מנדרינה הדס</option>
-                    <option value="ליים">ליים</option>
-                    <option value="קרה קרה">קרה קרה</option>
                 </select>
-                
-                <label>גודל פרי נוכחי (מ״מ) - אופציונלי:</label>
-                <input type="number" id="current-size" placeholder="לדוגמה: 40" min="0" max="200">
-                
-                <button onclick="getFruitSize()">בדוק גודל פרי</button>
             </div>
-            <div id="fruit-size-result"></div>
+
+            <div class="form-group">
+                <label for="harvest">סוג קטיף:</label>
+                <select id="harvest">
+                    <option value="">-- בחר סוג קטיף --</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">תאריך היום:</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-group">
+                    <label for="diameter">קוטר פרי (מ"מ):</label>
+                    <input type="number" id="diameter" min="0" max="200" placeholder="לדוגמה: 45">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-search" onclick="searchRecommendation()">🔍 חפש</button>
+                <button class="btn-reset" onclick="resetForm()">🔄 אפס</button>
+            </div>
         </div>
-        
-        <!-- TAB 4: Chat -->
-        <div id="chat" class="tab-content">
-            <div class="section">
-                <h2>💬 צ'אט עם העוזרת</h2>
-                <p class="info-text">שאל שאלה על חומרים או מזיקים</p>
-                
-                <label>סוג משתמש:</label>
-                <select id="mode-select">
-                    <option value="false">רשימה כללית (משרד החקלאות)</option>
-                    <option value="true">שוהם (מנדרינה אורי)</option>
-                </select>
-                
-                <label>שאלתך:</label>
-                <textarea id="chat-message" placeholder="לדוגמה: יש לי זבוב בפרי שלי, מה עושים?" rows="5"></textarea>
-                
-                <button onclick="sendChat()">שלח שאלה</button>
-            </div>
-            <div id="chat-result"></div>
+
+        <div id="result" class="card result-section"></div>
+
+        <div class="disclaimer">
+            ⚠️ <strong>הערה חשובה:</strong> המידע בעוזרת זו הוא המלצה בלבד. המשתמש נושא את האחריות המלאה לגבי החלטותיו בנוגע להשקיה וקטיף. יש להתייעץ עם מומחה לאישור הנתונים לתנאים הספציפיים של החלקה שלך.
         </div>
     </div>
-    
+
     <script>
-        const API_URL = 'https://pardes-advisor.onrender.com';
-        
-        function switchTab(tabName) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-        
-        function showResult(elementId, data, isError = false) {
-            const resultDiv = document.getElementById(elementId);
-            let className = isError ? 'result error' : 'result success';
-            resultDiv.innerHTML = `<div class="${className}">${JSON.stringify(data, null, 2)}</div>`;
-        }
-        
-        function showLoading(elementId) {
-            const resultDiv = document.getElementById(elementId);
-            resultDiv.innerHTML = `<div class="loading">⏳ טוען...</div>`;
-        }
-        
-        async function testHealth() {
-            showLoading('health-result');
+        const API_BASE = 'http://localhost:5000/api';
+
+        // Set today's date
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Load varieties on page load
+        window.onload = function() {
+            loadVarieties();
+        };
+
+        async function loadVarieties() {
             try {
-                const response = await fetch(`${API_URL}/api/health`);
-                const data = await response.json();
-                showResult('health-result', data, !response.ok);
-            } catch (error) {
-                showResult('health-result', { error: error.message }, true);
-            }
-        }
-        
-        async function getVarieties() {
-            showLoading('varieties-result');
-            try {
-                const response = await fetch(`${API_URL}/api/varieties`);
+                const response = await fetch(`${API_BASE}/varieties`);
                 const data = await response.json();
                 
-                if (data.varieties) {
-                    let html = '<div style="margin-top: 15px;">';
-                    html += `<div class="status ok">✅ נמצאו ${data.varieties.length} זנים</div>`;
-                    html += '<div class="varieties-list">';
-                    data.varieties.forEach(variety => {
-                        html += `<div class="variety-tag" onclick="copyVariety('${variety}')">${variety}</div>`;
-                    });
-                    html += '</div>';
-                    document.getElementById('varieties-result').innerHTML = html;
-                } else {
-                    showResult('varieties-result', data, true);
-                }
-            } catch (error) {
-                showResult('varieties-result', { error: error.message }, true);
-            }
-        }
-        
-        function copyVariety(variety) {
-            document.getElementById('variety-select').value = variety;
-            document.getElementById('current-size').focus();
-        }
-        
-        function updateVarietyInput() {
-            const selected = document.getElementById('variety-select').value;
-            if (selected) {
-                getFruitSize();
-            }
-        }
-        
-        async function getFruitSize() {
-            const variety = document.getElementById('variety-select').value;
-            const currentSize = document.getElementById('current-size').value;
-            
-            if (!variety) {
-                showResult('fruit-size-result', { error: 'בחר זן קודם כל!' }, true);
-                return;
-            }
-            
-            showLoading('fruit-size-result');
-            
-            try {
-                const body = { variety };
-                if (currentSize) {
-                    body.current_size_mm = parseInt(currentSize);
-                }
-                
-                const response = await fetch(`${API_URL}/api/fruit-size`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+                const select = document.getElementById('variety');
+                data.varieties.forEach(variety => {
+                    const option = document.createElement('option');
+                    option.value = variety;
+                    option.textContent = variety;
+                    select.appendChild(option);
                 });
-                
-                const data = await response.json();
-                
-                if (data.recommendation) {
-                    let html = `<div class="result success">${data.recommendation}</div>`;
-                    document.getElementById('fruit-size-result').innerHTML = html;
-                } else {
-                    showResult('fruit-size-result', data, !response.ok);
-                }
             } catch (error) {
-                showResult('fruit-size-result', { error: error.message }, true);
+                console.error('Error loading varieties:', error);
             }
         }
-        
-        async function sendChat() {
-            const message = document.getElementById('chat-message').value;
-            const isShoham = document.getElementById('mode-select').value === 'true';
+
+        async function onVarietyChange() {
+            const variety = document.getElementById('variety').value;
+            const harvestSelect = document.getElementById('harvest');
             
-            if (!message) {
-                showResult('chat-result', { error: 'כתוב שאלה קודם!' }, true);
+            harvestSelect.innerHTML = '<option value="">-- בחר סוג קטיף --</option>';
+            
+            if (!variety) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/harvests/${encodeURIComponent(variety)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.harvests.forEach(harvest => {
+                        const option = document.createElement('option');
+                        option.value = harvest;
+                        option.textContent = harvest;
+                        harvestSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading harvests:', error);
+            }
+        }
+
+        async function searchRecommendation() {
+            const variety = document.getElementById('variety').value;
+            const harvest = document.getElementById('harvest').value;
+            const date = document.getElementById('date').value;
+            const diameter = document.getElementById('diameter').value;
+            
+            if (!variety || !date || !diameter) {
+                showError('אנא מלא את כל השדות');
                 return;
             }
             
-            showLoading('chat-result');
+            showLoading();
             
             try {
-                const response = await fetch(`${API_URL}/api/chat`, {
+                const response = await fetch(`${API_BASE}/recommendations`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
-                        message,
-                        session_id: 'web_test_' + Date.now(),
-                        is_shoham: isShoham
+                        variety: variety,
+                        harvest_type: harvest || null,
+                        current_date: date,
+                        current_diameter: parseFloat(diameter)
                     })
                 });
                 
                 const data = await response.json();
                 
-                if (data.response) {
-                    let html = `<div class="result success">${data.response}</div>`;
-                    document.getElementById('chat-result').innerHTML = html;
+                if (data.success) {
+                    displayResults(data);
                 } else {
-                    showResult('chat-result', data, !response.ok);
+                    showError(data.error);
                 }
             } catch (error) {
-                showResult('chat-result', { error: error.message }, true);
+                showError(`שגיאה בחיבור לשרת: ${error.message}`);
             }
+        }
+
+        function displayResults(data) {
+            const resultDiv = document.getElementById('result');
+            const desiredRange = data.desired_range;
+            const measurements = data.closest_measurements;
+            
+            let html = '';
+            
+            // Header
+            html += `<h2>${data.variety}</h2>`;
+            
+            // Variety info
+            if (data.harvest_type) {
+                html += `<div class="variety-info">📅 סוג קטיף: <strong>${data.harvest_type}</strong></div>`;
+            }
+            
+            // Desired range
+            const minText = desiredRange.min || 'ללא מינימום';
+            const maxText = desiredRange.max || 'ללא מקסימום';
+            html += `
+                <div class="desired-range">
+                    <h3>קוטר פרי ממוצע רצוי</h3>
+                    <div class="range-display">${desiredRange.min || '?'} - ${desiredRange.max || '?'} מ"מ</div>
+                </div>
+            `;
+            
+            // Status
+            const status = data.diameter_status;
+            const statusClass = status.in_range ? 'status-good' : 'status-bad';
+            html += `<div class="status-box ${statusClass}">${status.status}</div>`;
+            
+            // Closest measurements
+            html += '<h3 style="margin-top: 20px; margin-bottom: 15px;">📊 המדידות הקרובות ביותר:</h3>';
+            html += '<div class="measurements-container">';
+            
+            if (measurements.before) {
+                const beforeDate = new Date(measurements.before.date);
+                const dateStr = formatHebrewDate(beforeDate);
+                html += `
+                    <div class="measurement-card before">
+                        <div class="measurement-label">⬅️ מדידה קודמת</div>
+                        <div class="measurement-date">${dateStr}</div>
+                        <div class="measurement-range">${measurements.before.range.min}-${measurements.before.range.max}</div>
+                    </div>
+                `;
+            }
+            
+            if (measurements.after) {
+                const afterDate = new Date(measurements.after.date);
+                const dateStr = formatHebrewDate(afterDate);
+                html += `
+                    <div class="measurement-card after">
+                        <div class="measurement-label">➡️ מדידה הבאה</div>
+                        <div class="measurement-date">${dateStr}</div>
+                        <div class="measurement-range">${measurements.after.range.min}-${measurements.after.range.max}</div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            
+            // Notes
+            if (data.notes && data.notes.length > 0) {
+                html += '<div class="notes">';
+                data.notes.forEach(note => {
+                    html += `<p>${note}</p>`;
+                });
+                html += '</div>';
+            }
+            
+            // Source
+            html += `<div class="source">📌 מקור: ${data.source}</div>`;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.classList.add('show');
+        }
+
+        function showLoading() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>מחפש נתונים...</p>
+                </div>
+            `;
+            resultDiv.classList.add('show');
+        }
+
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="error">❌ ${message}</div>`;
+            resultDiv.classList.add('show');
+        }
+
+        function resetForm() {
+            document.getElementById('variety').value = '';
+            document.getElementById('harvest').innerHTML = '<option value="">-- בחר סוג קטיף --</option>';
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('diameter').value = '';
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function formatHebrewDate(date) {
+            const months = ['ינו', 'פבר', 'מרס', 'אפר', 'מאי', 'יוני', 'יולי', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
+            const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+            
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            
+            return `${day} ${month} ${year}`;
         }
     </script>
 </body>
