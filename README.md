@@ -150,32 +150,40 @@ mkdir pardes-server
 cd pardes-server
 
 # העתק את הקבצים
-cp app.py data_fruit_sizes.py requirements.txt .
+cp app.py data_fruit_sizes.py requirements.txt Procfile .
 ```
 
-### 2. צור Procfile
-```bash
-cat > Procfile << EOF
-web: gunicorn app:app
-EOF
-```
-
-### 3. דחוף ל-GitHub
+### 2. דחוף ל-GitHub
 ```bash
 git init
 git add .
-git commit -m "Initial commit"
+git commit -m "Initial commit - Pardes Advisor v5"
 git push origin main
 ```
 
-### 4. הצע ל-Render
+### 3. תגדר ב-Render
 
 1. התחבר ל- [render.com](https://render.com)
-2. New → Web Service
+2. **New → Web Service**
 3. חבר את ה-GitHub repo
-4. הגדר:
+4. הגדרות:
+   - **Name**: `pardes-advisor`
+   - **Region**: בחר אזור קרוב
+   - **Branch**: `main`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
-   - **Port**: 5000
+   - **Port**: `5000`
+
+### 4. הוסף Environment Variable (חיוני ל-CORS)
+```
+FLASK_ENV=production
+```
+
+### 5. בדוק את הדפלוימנט
+```bash
+# כתובת URL: https://pardes-advisor.onrender.com/api/health
+```
 
 ---
 

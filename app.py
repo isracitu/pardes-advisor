@@ -1,11 +1,22 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template_string
 from flask_cors import CORS
 from datetime import datetime
 from data_fruit_sizes import FRUIT_SIZES_DATA, find_closest_measurements
 import json
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 CORS(app)
+
+@app.route('/', methods=['GET'])
+def index():
+    """Serve the main HTML interface"""
+    return render_template_string(open(os.path.join(app.template_folder, 'index.html')).read())
+
+@app.route('/widget', methods=['GET'])
+def widget():
+    """Alias for the widget interface"""
+    return render_template_string(open(os.path.join(app.template_folder, 'index.html')).read())
 
 @app.route('/api/varieties', methods=['GET'])
 def get_varieties():
