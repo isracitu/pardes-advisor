@@ -1,147 +1,206 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import anthropic
-import os
-from data_general import GENERAL_DATA
-from data_shoham import SHOHAM_DATA
-from data_labels import get_label_url, LABELS
+from anthropic import Anthropic
+import json
+from datetime import datetime
+
+# Import data modules
+from data_general import PESTS_GENERAL, PRODUCTS_GENERAL
+from data_shoham import PESTS_SHOHAM, PRODUCTS_SHOHAM, SHOHAM_RULES
+from data_labels import PRODUCT_LABELS
+from data_fruit_size import FRUIT_SIZE_DATA, format_size_recommendation
 
 app = Flask(__name__)
 CORS(app)
 
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+# Initialize Anthropic client
+client = Anthropic()
 
-FORMAT_RULES = """
-**חשוב מאוד — פורמט תשובה:**
-- אל תשתמש בטבלאות Markdown עם | בכלל!
-- השב בפורמט הבא לכל חומר:
+# Store conversation history per session
+conversations = {}
 
-🌿 **שם התכשיר**
-חומר פעיל: XXX
-⏱️ ימי המתנה לקטיף: X ימים
-⚗️ מינון: X
-ℹ️ הערה: X (אם יש)
-⚠️ אזהרה: X (אם יש)
-📋 [קישור לתווית]
+def get_or_create_conversation(session_id):
+    """Get or create a conversation for a session"""
+    if session_id not in conversations:
+        conversations[session_id] = []
+    return conversations[session_id]
 
----
+def format_pesticide_recommendation(products, mode="general"):
+    """Format pesticide products with PHI sorting"""
+    if not products:
+        return "לא נמצאו חומרים מתאימים."
+    
+    # Sort by PHI (pre-harvest interval)
+    sorted_products = sorted(
+        products,
+        key=lambda x: x.get("phi_days", float('inf'))
+    )
+    
+    result = "🍊 **חומרים מאושרים:**\n\n"
+    
+    for product in sorted_products[:5]:  # Top 5
+        name = product.get("name", "?")
+        pest = product.get("pest", "?")
+        phi = product.get("phi_days", "?")
+        rate = product.get("rate", "?")
+        notes = product.get("notes", "")
+        doc_id = product.get("doc_id", None)
+        
+        result += f"**{name}**\n"
+        result += f"  🐛 מזיק: {pest}\n"
+        result += f"  ⏰ PHI: {phi} ימים\n"
+        result += f"  📊 קצב: {rate}\n"
+        
+        if doc_id:
+            label_url = f"https://pesticides.moag.gov.il/LabelView/{doc_id}"
+            result += f"  📄 [תווית רשמית]({label_url})\n"
+        
+        if notes:
+            result += f"  ⚠️ הערות: {notes}\n"
+        
+        result += "\n"
+    
+    return result
 
-- הפרד בין חומרים עם קו: ---
-- מיין מהקרוב לקטיף לרחוק ביותר
-- בהתחלה — הוסף שורה אחת: "מצאתי X חומרים נגד [שם המזיק], ממוינים מהקרוב לקטיף:"
-- בסוף — הוסף הצהרת אחריות
-"""
+def format_shoham_warning(products):
+    """Format special Shoham warnings if needed"""
+    warning = ""
+    
+    has_compound_limits = any(
+        p.get("compound_category") for p in products
+    )
+    
+    if has_compound_limits:
+        warning += "⚠️ **הערה חשובה לשוהם:**\n"
+        warning += "יש הגבלות מיוחדות על ספירת חומרים בתרופות מתקבוצות מסוימות.\n"
+        warning += "**חובה להתייעץ עם מדריך משק מוסמך לפני שימוש.**\n\n"
+    
+    return warning
 
-DISCLAIMER = """
-⚠️ **המידע הוא המלצה בלבד.**
-האחריות המלאה על כל יישום חלה על המשתמש.
-לפני שימוש — קרא את התווית והתייעץ עם מדריך מוסמך.
-"""
-
-SYSTEM_GENERAL = f"""אתה עוזר חקלאי מקצועי לפרדסנים ישראלים המגדלים הדרים ליצוא.
-שייך לארגון מגדלי ההדרים בישראל.
-ענה בעברית פשוטה, ברורה וידידותית — כמו מדריך חקלאי מנוסה שמדבר עם פרדסן בשדה.
-
-{FORMAT_RULES}
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    """Main chat endpoint"""
+    try:
+        data = request.json
+        user_message = data.get("message", "").strip()
+        session_id = data.get("session_id", "default")
+        is_shoham = data.get("is_shoham", False)
+        
+        if not user_message:
+            return jsonify({"error": "Message is required"}), 400
+        
+        # Get conversation history
+        conversation = get_or_create_conversation(session_id)
+        
+        # Build system prompt based on track
+        if is_shoham:
+            system_prompt = """אתה עוזר חכם לחקלאים בישראל שמגדלים הדרים.
+            
+מצב שוהם: אתה עוזר בתוכנית שוהם (מנדרינה אורי).
 
 כללים:
-1. ענה אך ורק על פי המאגר שלהלן
-2. מיין חומרים מ-PHI נמוך לגבוה
-3. אם שאלה לא קשורה להדברה בהדרים — אמור שאתה מתמחה רק בנושא זה
-4. כשמבקשים תווית — ספק קישור: https://pesticides.moag.gov.il/coim/Documents/GetFile?folder=Import&name=XXXX
+1. תן המלצות על כימיקלים לחסל מזיקים מהרשימה המאושרת בלבד.
+2. השתמש בהמלצות מהטבלה שלהלן לכל מזיק.
+3. ממיין את התוצאות לפי PHI (ימי המתנה לקטיף) — קטן ל-גדול.
+4. כלול תמיד הצהרת אחריות: "המידע הוא המלצה בלבד. האחריות חלה על המשתמש."
+5. לשוהם יש הגבלות מיוחדות על ספירת חומרים — הזהר!
 
-מאגר הנתונים:
-{GENERAL_DATA}
+השב בעברית פשוטה וברורה."""
+        else:
+            system_prompt = """אתה עוזר חכם לחקלאים בישראל שמגדלים הדרים.
 
-הצהרת אחריות:
-{DISCLAIMER}
-"""
+כללים:
+1. תן המלצות על כימיקלים לחסל מזיקים מהרשימה המאושרת בלבד.
+2. ממיין את התוצאות לפי PHI (ימי המתנה לקטיף) — קטן ל-גדול.
+3. כלול תמיד הצהרת אחריות: "המידע הוא המלצה בלבד. האחריות חלה על המשתמש."
 
-SYSTEM_SHOHAM = f"""אתה עוזר חקלאי מקצועי למגדלי מנדרינה אורי (Orri) של שוהם ליצוא.
-שייך לארגון מגדלי ההדרים בישראל.
-ענה בעברית פשוטה וידידותית.
+השב בעברית פשוטה וברורה."""
+        
+        # Check for fruit size question
+        fruit_size_keywords = ["גודל פרי", "קוטר", "מ״מ", "מילימטר", "גודל"]
+        is_fruit_size_question = any(keyword in user_message for keyword in fruit_size_keywords)
+        
+        # Add user message to history
+        conversation.append({"role": "user", "content": user_message})
+        
+        # Get AI response
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            system=system_prompt,
+            messages=conversation
+        )
+        
+        assistant_message = response.content[0].text
+        
+        # Add assistant response to history
+        conversation.append({"role": "assistant", "content": assistant_message})
+        
+        # Add liability disclaimer
+        disclaimer = "\n\n⚖️ **הצהרת אחריות משפטית:**\nהמידע הוא המלצה בלבד ובמטרה להנחיה כללית בלבד. האחריות המלאה על היישום חלה על המשתמש. לפני שימוש בכל חומר — קרא בעיון את התווית הרשמית ותייעץ עם מדריך משק מוסמך."
+        
+        return jsonify({
+            "response": assistant_message + disclaimer,
+            "session_id": session_id,
+            "is_shoham": is_shoham,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-{FORMAT_RULES}
+@app.route("/api/fruit-size", methods=["POST"])
+def get_fruit_size():
+    """Get fruit size recommendation for a variety"""
+    try:
+        data = request.json
+        variety = data.get("variety", "").strip()
+        current_size = data.get("current_size_mm")
+        
+        if not variety:
+            # Return list of all varieties
+            varieties = list(FRUIT_SIZE_DATA.keys())
+            return jsonify({"varieties": varieties})
+        
+        # Get recommendation
+        recommendation = format_size_recommendation(variety, current_size)
+        
+        return jsonify({
+            "variety": variety,
+            "recommendation": recommendation,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-כללים חשובים:
-1. ענה אך ורק על פי מאגר שוהם
-2. בתחילת כל תשובה — הוסף תיבת אזהרה של שוהם:
-   "🟡 **כללי שוהם — חובה לקרוא!**
-   • אין להשתמש ביותר מ-2 חומרים מהקבוצה: פריגן/מגדילון + PYRIPROXYFEN + SPIRODICLOFEN/SPIROTETRAMAT + PYRIDABEN + IMIDACLOPRID
-   • חומרים עם שארית נספרים במניין
-   • בכל ספק — התייעץ עם שהם"
-3. כשחומר משאיר שארית — ציין במפורש "⚠️ נספר בקבוצה המוגבלת"
-4. "לא לגרמניה" — ציין "⚠️ לא לגרמניה — התייעץ עם שהם!"
-5. מיין מ-PHI נמוך לגבוה
+@app.route("/api/varieties", methods=["GET"])
+def get_varieties():
+    """Get list of all fruit varieties"""
+    try:
+        varieties = list(FRUIT_SIZE_DATA.keys())
+        return jsonify({"varieties": varieties})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-מאגר שוהם — מנדרינה אורי 2026-2027:
-{SHOHAM_DATA}
-
-הצהרת אחריות:
-{DISCLAIMER}
-"""
-
-@app.route('/chat', methods=['POST'])
-def chat():
-    data = request.json
-    user_message = data.get('message', '')
-    is_shoham = data.get('is_shoham', False)
-    history = data.get('history', [])
-
-    if not user_message:
-        return jsonify({'error': 'No message'}), 400
-
-    label_links = []
-    msg_lower = user_message.lower()
-    if 'תווית' in msg_lower:
-        for name in LABELS:
-            if name in user_message:
-                info = get_label_url(name)
-                if info:
-                    label_links.append(info)
-
-    system = SYSTEM_SHOHAM if is_shoham else SYSTEM_GENERAL
-    messages = history[-10:] + [{"role": "user", "content": user_message}]
-
-    if label_links:
-        extra = "\n\nקישורי תוויות:\n"
-        for l in label_links:
-            extra += f"- {l['name']}: {l['url']}\n"
-        messages[-1]["content"] += extra
-
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
-        system=system,
-        messages=messages
-    )
-
-    return jsonify({
-        'reply': response.content[0].text,
-        'label_links': label_links,
-        'is_shoham': is_shoham
-    })
-
-@app.route('/label', methods=['GET'])
-def get_label():
-    name = request.args.get('name', '')
-    if not name:
-        return jsonify({'error': 'נדרש שם תכשיר'}), 400
-    result = get_label_url(name)
-    if result:
-        return jsonify(result)
-    return jsonify({'error': f'לא נמצאה תווית עבור {name}',
-                    'fallback': 'https://pesticides.moag.gov.il'}), 404
-
-@app.route('/health', methods=['GET'])
+@app.route("/api/health", methods=["GET"])
 def health():
+    """Health check"""
+    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+
+@app.route("/", methods=["GET"])
+def root():
+    """Root endpoint"""
     return jsonify({
-        'status': 'ok',
-        'message': 'עוזרת הפרדס פעילה',
-        'version': '2.1',
-        'labels_count': len(LABELS)
+        "name": "עוזרת הפרדס",
+        "version": "4.0",
+        "endpoints": {
+            "chat": "/api/chat (POST)",
+            "fruit-size": "/api/fruit-size (POST)",
+            "varieties": "/api/varieties (GET)",
+            "health": "/api/health (GET)"
+        }
     })
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    app.run(debug=False, host="0.0.0.0", port=5000)

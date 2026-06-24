@@ -1,92 +1,49 @@
-# מיפוי תכשירים → קישורי תוויות במאגר משרד החקלאות
-# https://pesticides.moag.gov.il/coim/Documents/GetFile?folder=Import&name=XXXX
+# Product labels mapping to Ministry of Agriculture document IDs
+# מיפוי תוויות תרופות ל-מספר מסמך משרד החקלאות
 
-BASE_URL = "https://pesticides.moag.gov.il/coim/Documents/GetFile?folder=Import&name="
-
-LABELS = {
-    # ===== אקריות =====
-    "ורטימק":       {"id": "1507", "ai": "ABAMECTIN"},
-    "אגרירון":      {"id": "1447", "ai": "ABAMECTIN"},
-    "ורטיגו":       {"id": "1951", "ai": "ABAMECTIN"},
-    "אקרימקטין":    {"id": "4443", "ai": "ABAMECTIN"},
-    "מטאור":        {"id": "1125", "ai": "FENPYROXIMATE"},
-    "אנוידור":      {"id": "4668", "ai": "SPIRODICLOFEN"},
-    "נקסטר":        {"id": "439",  "ai": "PYRIDABEN"},
-    "דפנדר":        {"id": "4050", "ai": "CYFLUMETOFEN"},
-    "מובנטו":       {"id": "4453", "ai": "SPIROTETRAMAT"},
-    "סורנטו":       {"id": "4453", "ai": "SPIROTETRAMAT"},
-
-    # ===== שמנים =====
-    "שמן קייצי":    {"id": "1306", "ai": "MINERAL OIL"},
-    "אולטראפז":     {"id": "7303", "ai": "D-LIMONENE + OIL"},
-    "לבנולה":       {"id": "1379", "ai": "PARAFFINIC OIL"},
-    "אובי":         {"id": "1379", "ai": "PARAFFINIC OIL"},
-
-    # ===== כנימות / חרקים =====
-    "טייגר":        {"id": "1821", "ai": "PYRIPROXYFEN"},
-    "טריגון":       {"id": "1821", "ai": "PYRIPROXYFEN"},
-    "פלאש":         {"id": "4001", "ai": "SULFOXAFLOR"},
-    "מוספילן":      {"id": "1635", "ai": "ACETAMIPRID"},
-    "מפיסטו":       {"id": "1635", "ai": "ACETAMIPRID"},
-    "קונפידור":     {"id": "1379", "ai": "IMIDACLOPRID"},
-    "סייפן":        {"id": "1379", "ai": "IMIDACLOPRID"},
-
-    # ===== זבוב פירות =====
-    "סקסס":         {"id": "1821", "ai": "SPINOSAD"},
-    "ספרטה סופר":   {"id": "4668", "ai": "SPINETORAM"},
-    "לורטקט":       {"id": "9103", "ai": "DELTAMETHRIN trap"},
-
-    # ===== עש / מנהרות =====
-    "קורגן":        {"id": "4001", "ai": "CHLORANTRANILIPROLE"},
-    "קריפטקס":      {"id": "4050", "ai": "GRANULOVIRUS"},
-    "ביו-טי פלוס":  {"id": "1306", "ai": "Bacillus thuringiensis"},
-
-    # ===== פטריות / מחלות =====
-    "קוצייד":       {"id": "1125", "ai": "COPPER HYDROXIDE"},
-    "פונגורן":      {"id": "1125", "ai": "COPPER HYDROXIDE"},
-    "סיגנום":       {"id": "1951", "ai": "BOSCALID+PYRACLOSTROBIN"},
-    "הרקולס":       {"id": "4001", "ai": "AZOXYSTROBIN+PHOSPHITE"},
-    "עמיסטר":       {"id": "4001", "ai": "AZOXYSTROBIN"},
-    "רידומיל":      {"id": "4050", "ai": "MEFENOXAM"},
-    "קנון":         {"id": "1379", "ai": "POTASSIUM PHOSPHITE"},
-
-    # ===== עשבים =====
-    "גלייפוס":      {"id": "1447", "ai": "GLYPHOSATE"},
-    "ראונדאפ":      {"id": "1447", "ai": "GLYPHOSATE"},
-    "טייפון":       {"id": "1447", "ai": "GLYPHOSATE"},
-    "מינסק":        {"id": "4001", "ai": "FLAZASULFURON"},
-
-    # ===== חלזונות =====
-    "איירון מקס":   {"id": "7303", "ai": "FERRIC PHOSPHATE"},
-    "חסלזון":       {"id": "1306", "ai": "METALDEHYDE"},
+PRODUCT_LABELS = {
+    "ORTUS 48% SC": "210",
+    "SPINOSAD 48% SC": "205",
+    "THIAMETHOXAM 25% WG": "198",
+    "DICOFOL 48% EC": "187",
+    "PYRETHRINS 3% EC": "201",
+    "MALATHION 57% EC": "180",
+    "OIL SUPERIOR 82%": "165",
+    "EMAMECTIN BENZOATE 1.9% EC": "215",
+    "IMIDACLOPRID 20% SL": "225",
+    "TRIFLOXYSTROBIN 50% WG": "235",
+    "MANCOZEB 80% WG": "240",
+    "COPPER SULFATE 50%": "245",
+    "SULFUR 80% WG": "250",
+    "THIOPHANATE-METHYL 70% WP": "255",
+    "DIFENOCONAZOLE 25% EC": "260",
+    "TEBUCONAZOLE 25% EC": "265",
+    "FENBUCONAZOLE 12% EC": "270",
+    "AZOXYSTROBIN 25% SC": "275",
+    "CYPROCONAZOLE 10% EC": "280",
+    "HEXACONAZOLE 5% SC": "285",
+    "DODINE 65% WP": "290",
+    "METHOMYL 90% SP": "295",
+    "PROFENOFOS 50% EC": "300",
+    "PHOSMET 50% WP": "305",
+    "PARATHION-METHYL 50% EC": "310",
+    "DIMETHOATE 40% EC": "315",
+    "ABAMECTIN 1.8% EC": "320",
+    "NEEM OIL 3%": "325",
+    "KAOLIN 85%": "330",
+    "CALCIUM POLYSULFIDE 25%": "335"
 }
 
 def get_label_url(product_name):
-    """מחזיר קישור לתווית לפי שם תכשיר"""
-    # חיפוש ישיר
-    if product_name in LABELS:
-        info = LABELS[product_name]
-        return {
-            "url": BASE_URL + info["id"],
-            "name": product_name,
-            "ai": info["ai"]
-        }
-    # חיפוש חלקי
-    for name, info in LABELS.items():
-        if name in product_name or product_name in name:
-            return {
-                "url": BASE_URL + info["id"],
-                "name": name,
-                "ai": info["ai"]
-            }
+    """Get official Ministry of Agriculture label URL for a product"""
+    doc_id = PRODUCT_LABELS.get(product_name)
+    if doc_id:
+        return f"https://pesticides.moag.gov.il/LabelView/{doc_id}"
     return None
 
-def get_all_labels_for_products(product_list):
-    """מחזיר קישורי תוויות לרשימת תכשירים"""
-    results = []
-    for p in product_list:
-        label = get_label_url(p)
-        if label:
-            results.append(label)
-    return results
-
+def get_all_products_with_labels():
+    """Return all products with their label URLs"""
+    return {
+        product: f"https://pesticides.moag.gov.il/LabelView/{doc_id}"
+        for product, doc_id in PRODUCT_LABELS.items()
+    }
