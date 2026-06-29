@@ -1,206 +1,356 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from datetime import datetime
-from data_fruit_sizes import FRUIT_SIZES_DATA, find_closest_measurements
-from data_pesticides import PESTS_AND_TREATMENTS, list_all_pests, search_treatment, get_pest_treatments, build_pests_context
-import json
+import anthropic
 import os
+from datetime import datetime
+from data_general import GENERAL_DATA
+from data_shoham import SHOHAM_DATA
+from data_granot import GRANOT_DATA
+from data_labels import get_label_url, LABELS
+from data_fruit_size import (
+    FRUIT_SIZE_DB, VARIETY_KW,
+    get_variety_options, get_harvest_months, find_closest_dates
+)
 
-app = Flask(__name__, static_folder='templates', static_url_path='')
+app = Flask(__name__)
 CORS(app)
 
-# ===== דפים =====
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-@app.route('/')
-def index():
-    return send_from_directory('templates', 'index.html')
+DISCLAIMER = """
+⚠️ **המידע הוא המלצה בלבד.**
+האחריות המלאה על כל יישום חלה על המשתמש.
+לפני שימוש — קרא את התווית והתייעץ עם מדריך מוסמך.
+"""
 
-@app.route('/widget')
-def widget():
-    return send_from_directory('templates', 'index.html')
+FORMAT_RULES = """
+**פורמט תשובה לחומרי הדברה:**
+- אל תשתמש בטבלאות Markdown עם |
+- לכל חומר:
+🌿 **שם התכשיר**
+חומר פעיל: XXX
+⏱️ ימי המתנה: X ימים
+⚗️ מינון: X
+ℹ️ הערה: X
+⚠️ אזהרה: X
+---
+- מיין מ-PHI נמוך לגבוה
+- בהתחלה: "מצאתי X חומרים נגד [מזיק], ממוינים מהקרוב לקטיף:"
+- בסוף: הצהרת אחריות
+"""
 
-# ===== API גודל פרי =====
+SYSTEM_GENERAL = f"""אתה עוזר חקלאי מקצועי לפרדסנים ישראלים.
+שייך לארגון מגדלי ההדרים בישראל.
+ענה בעברית פשוטה כמו מדריך חקלאי בשדה.
 
-@app.route('/api/varieties', methods=['GET'])
-def get_varieties():
-    varieties = sorted(list(FRUIT_SIZES_DATA.keys()))
-    return jsonify({"success": True, "varieties": varieties, "count": len(varieties)})
+התאריך היום: {datetime.now().strftime('%d/%m/%Y')}
 
-@app.route('/api/harvests/<variety>', methods=['GET'])
-def get_harvests(variety):
-    if variety not in FRUIT_SIZES_DATA:
-        return jsonify({"success": False, "error": "זן לא נמצא"}), 404
-    data = FRUIT_SIZES_DATA[variety]
-    return jsonify({
-        "success": True, "variety": variety,
-        "desired_range": data["desired_range"],
-        "source": data["source"],
-        "harvests": list(data["harvests"].keys())
-    })
+{FORMAT_RULES}
 
-@app.route('/api/recommendations', methods=['POST'])
-def get_recommendations():
-    try:
-        data = request.json
-        variety = data.get("variety")
-        harvest_type = data.get("harvest_type")
-        current_date_str = data.get("current_date")
-        current_diameter = data.get("current_diameter")
+ענה לפי המאגר הזה בלבד:
+{GENERAL_DATA}
 
-        if not all([variety, current_date_str, current_diameter is not None]):
-            return jsonify({"success": False, "error": "חסרים פרמטרים"}), 400
+{DISCLAIMER}
+"""
 
-        if variety not in FRUIT_SIZES_DATA:
-            return jsonify({"success": False, "error": f"זן '{variety}' לא נמצא"}), 404
+SYSTEM_SHOHAM = f"""אתה עוזר חקלאי למגדלי שוהם (מנדרינה אורי) ליצוא.
+שייך לארגון מגדלי ההדרים בישראל.
 
-        variety_data = FRUIT_SIZES_DATA[variety]
+התאריך היום: {datetime.now().strftime('%d/%m/%Y')}
 
-        if harvest_type and harvest_type not in variety_data["harvests"]:
-            return jsonify({"success": False, "error": f"סוג קטיף '{harvest_type}' לא נמצא"}), 404
+{FORMAT_RULES}
 
-        try:
-            current_date = datetime.strptime(current_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            return jsonify({"success": False, "error": "פורמט תאריך שגוי. YYYY-MM-DD"}), 400
+כללי שוהם - חובה:
+1. בראש כל תשובה הצג:
+"🟡 **כללי שוהם — חובה לקרוא!**
+• אין יותר מ-2 חומרים מהקבוצה: פריגן/מגדילון + PYRIPROXYFEN + SPIRODICLOFEN/SPIROTETRAMAT + PYRIDABEN + IMIDACLOPRID
+• חומרים עם שארית נספרים במניין
+• בכל ספק — התייעץ עם שהם"
+2. חומר עם שארית — ציין "⚠️ נספר בקבוצה המוגבלת"
+3. "לא לגרמניה" — ציין "⚠️ לא לגרמניה — התייעץ עם שהם!"
 
-        current_diameter = float(current_diameter)
+ענה לפי מאגר שוהם בלבד:
+{SHOHAM_DATA}
 
-        if not harvest_type:
-            harvest_type = list(variety_data["harvests"].keys())[0]
+{DISCLAIMER}
+"""
 
-        measurements = find_closest_measurements(variety, harvest_type, current_date.isoformat())
-        if not measurements:
-            return jsonify({"success": False, "error": "לא נמצאו מדידות לתאריך זה"}), 404
+SYSTEM_GRANOT = f"""אתה עוזר חקלאי למגדלי גרנות פרש ליצוא.
+שייך לארגון מגדלי ההדרים בישראל.
 
-        desired_range = variety_data["desired_range"]
-        response = {
-            "success": True, "variety": variety, "harvest_type": harvest_type,
-            "current_date": current_date_str, "current_diameter": current_diameter,
-            "desired_range": desired_range, "source": variety_data["source"],
-        }
+התאריך היום: {datetime.now().strftime('%d/%m/%Y')}
 
-        measurements_response = {}
-        if measurements["before"]:
-            measurements_response["before"] = {"date": measurements["before"]["date"], "range": measurements["before"]["range"]}
-        if measurements["after"]:
-            measurements_response["after"] = {"date": measurements["after"]["date"], "range": measurements["after"]["range"]}
-        response["closest_measurements"] = measurements_response
+{FORMAT_RULES}
 
-        min_r = desired_range.get("min")
-        max_r = desired_range.get("max")
-        in_range = True
-        status = "בטווח רצוי"
-        if min_r and current_diameter < min_r:
-            in_range = False
-            status = "קטן מדי - צריך להגביר השקיה"
-        elif max_r and current_diameter > max_r:
-            in_range = False
-            status = "גדול מדי - צריך להפחית השקיה"
-        response["diameter_status"] = {"in_range": in_range, "status": status}
+כללי גרנות פרש - חובה:
+1. בראש כל תשובה הצג:
+"🟢 **כללי גרנות פרש — חובה לקרוא!**
+• 🟨 תכשירים מסומנים צהוב = סיכון לשאריות — עד 2 שימושים. חובה לדווח לצוות גרנות-פרש!
+• 🟪 תכשירים מסומנים סגול = נאסרו ע"י חלק מהלקוחות — חובה לדווח לצוות גרנות-פרש!
+• בכל ספק — התייעץ עם צוות גרנות-פרש"
+2. כל חומר מסומן 🟨 בתשובה — ציין במפורש "🟨 דווח לגרנות-פרש!"
+3. כל חומר מסומן 🟪 בתשובה — ציין במפורש "🟪 אסור לחלק מהלקוחות — דווח לגרנות-פרש!"
 
-        notes = []
-        if "ליים" in variety.lower():
-            if harvest_type and "אזור 1" in harvest_type:
-                notes.append("זן זה מגדל בשתי אזוריות שונות. אתה צופה בנתונים עבור אזור: כינרת / בית שאן")
-            elif harvest_type and "אזור 2" in harvest_type:
-                notes.append("זן זה מגדל בשתי אזוריות שונות. אתה צופה בנתונים עבור אזור: עמק החולה")
-        if "קלמנטינה מיכל" in variety.lower():
-            notes.append("נתונים זמינים עד קטיף נובמבר בלבד.")
-        if notes:
-            response["notes"] = notes
+ענה לפי מאגר גרנות פרש בלבד:
+{GRANOT_DATA}
 
-        return jsonify(response)
-    except Exception as e:
-        return jsonify({"success": False, "error": f"שגיאה: {str(e)}"}), 500
+{DISCLAIMER}
+"""
 
-# ===== API תכשירי הדברה =====
+def detect_variety_in_text(text):
+    text_lower = text.lower()
+    if 'פומלית ירוקה' in text_lower:
+        return 'פומלית ירוקה', False
+    if 'פומלית צהובה' in text_lower:
+        return 'פומלית צהובה', False
+    for kw, variety in VARIETY_KW.items():
+        if kw.lower() in text_lower:
+            if variety.startswith('_ASK_'):
+                return variety, True
+            return variety, False
+    return None, False
 
-@app.route('/api/pests', methods=['GET'])
-def get_pests_list():
-    return jsonify({"success": True, "pests": list_all_pests(), "count": len(list_all_pests())})
+def extract_size_from_text(text):
+    import re
+    matches = re.findall(r'\b(\d{2,3})\b', text)
+    for m in matches:
+        n = int(m)
+        if 10 <= n <= 200:
+            return n
+    return None
 
-@app.route('/api/pest/<pest_name>', methods=['GET'])
-def get_pest_info(pest_name):
-    pest_data = get_pest_treatments(pest_name)
-    if not pest_data:
-        return jsonify({"success": False, "error": f"מזיק '{pest_name}' לא נמצא"}), 404
-    return jsonify({
-        "success": True,
-        "pest_hebrew": pest_data["שם_עברי"],
-        "pest_scientific": pest_data["שם_מדעי"],
-        "treatments": pest_data["תכשירים"],
-        "count": len(pest_data["תכשירים"])
-    })
+def format_date_he(month, day):
+    months = ['', 'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+              'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר']
+    return f"{day} ב{months[month]}"
 
-@app.route('/api/search-treatment', methods=['GET'])
-def search_treatments():
-    q = request.args.get('q', '').strip()
-    if not q:
-        return jsonify({"success": False, "error": "צריך מילת חיפוש"}), 400
-    results = search_treatment(q)
-    return jsonify({"success": True, "search_term": q, "results": results, "count": len(results)})
-
-# ===== API צ'אט =====
-
-@app.route('/api/chat', methods=['POST'])
+@app.route('/chat', methods=['POST'])
 def chat():
-    try:
-        import anthropic
+    data = request.json
+    user_message = data.get('message', '')
+    grower_type = data.get('grower_type', 'general')
+    fruit_context = data.get('fruit_context', {})
+    history = data.get('history', [])
+    mode = data.get('mode', 'pesticide')  # pesticide / fruit
 
-        data = request.json
-        question = data.get('question', '').strip()
-        if not question:
-            return jsonify({"success": False, "error": "אנא שלח שאלה"}), 400
+    if not user_message and not fruit_context.get('active'):
+        return jsonify({'error': 'No message'}), 400
 
-        # בנה context מלא - כל הנתונים, לא חתוכים
-        pests_ctx = build_pests_context()
+    # מצב גודל פרי
+    if mode == 'fruit' or fruit_context.get('active'):
+        return handle_fruit_size(user_message, fruit_context, history)
 
-        varieties_list = sorted(FRUIT_SIZES_DATA.keys())
-        fruit_lines = []
-        for v in varieties_list:
-            vd = FRUIT_SIZES_DATA[v]
-            dr = vd.get("desired_range", {})
-            fruit_lines.append(f"- {v}: טווח רצוי {dr.get('min','?')}-{dr.get('max','?')} מ\"מ, סוגי קטיף: {', '.join(vd['harvests'].keys())}")
-        fruit_ctx = "\n".join(fruit_lines)
+    # מצב חומרי הדברה
+    if grower_type == 'shoham':
+        system = SYSTEM_SHOHAM
+    elif grower_type == 'granot':
+        system = SYSTEM_GRANOT
+    else:
+        system = SYSTEM_GENERAL
 
-        system_prompt = f"""אתה "עוזרת הפרדס" - יועצת מקצועית לחקלאי הדרים בישראל.
+    label_links = []
+    if 'תווית' in user_message.lower():
+        for name in LABELS:
+            if name in user_message:
+                info = get_label_url(name)
+                if info:
+                    label_links.append(info)
 
-כללים חשובים:
-1. ענה רק על סמך הנתונים שלהלן. אם אין לך מידע - אמור בבירור "אין לי מידע על כך".
-2. אל תמציא שום נתון, תכשיר, או המלצה.
-3. ענה בעברית ברורה ופשוטה.
-4. תשובות קצרות וישירות.
+    messages = history[-10:] + [{"role": "user", "content": user_message}]
 
-=== נתוני גודל פרי (13 זנים) ===
-{fruit_ctx}
+    if label_links:
+        extra = "\n\nקישורי תוויות:\n"
+        for l in label_links:
+            extra += f"- {l['name']}: {l['url']}\n"
+        messages[-1]["content"] += extra
 
-=== תכשירי הדברה מורשים ===
-{pests_ctx}
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2000,
+        system=system,
+        messages=messages
+    )
 
-מקור הנתונים: משרד החקלאות, מהדורה 2026."""
+    return jsonify({
+        'reply': response.content[0].text,
+        'label_links': label_links,
+        'type': 'pesticide'
+    })
 
-        client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=600,
-            system=system_prompt,
-            messages=[{"role": "user", "content": question}]
-        )
+def handle_fruit_size(user_message, ctx, history):
+    """לוגיקת גודל פרי"""
+    if not ctx.get('variety'):
+        variety, needs_ask = detect_variety_in_text(user_message)
+        if not variety:
+            return jsonify({
+                'reply': 'אנא בחר זן או כתוב את שמו (לדוגמה: ניוהול, אורי, פומלית, אשכולית).',
+                'type': 'fruit_size',
+                'fruit_context': {'active': True},
+                'options': {
+                    'question': 'variety_type',
+                    'choices': [
+                        {'label': '🍊 ניוהול', 'value': 'ניוהול'},
+                        {'label': '🟡 אורי', 'value': 'אורי'},
+                        {'label': '🍋 פומלית ירוקה', 'value': 'פומלית ירוקה'},
+                        {'label': '🟢 פומלית צהובה', 'value': 'פומלית צהובה'},
+                        {'label': '🔴 אשכולית אדומה', 'value': 'אשכולית אדומה'},
+                        {'label': '🟠 פומלו אדום', 'value': 'פומלו אדום'},
+                        {'label': '🍊 מינאולה', 'value': 'מינאולה'},
+                        {'label': '🟠 קלמנטינה מיכל', 'value': 'קלמנטינה מיכל'},
+                        {'label': '🟡 הדס', 'value': 'הדס'},
+                        {'label': '🟢 ליים', 'value': 'ליים'},
+                        {'label': '🟠 קרה קרה', 'value': 'קרה קרה'},
+                    ]
+                }
+            })
 
-        return jsonify({"success": True, "question": question, "answer": message.content[0].text})
+        if variety == '_ASK_פומלית':
+            return jsonify({
+                'reply': 'איזו פומלית? 🍋',
+                'type': 'fruit_size',
+                'fruit_context': {'active': True},
+                'options': {
+                    'question': 'variety_type',
+                    'choices': [
+                        {'label': '🟢 פומלית ירוקה', 'value': 'פומלית ירוקה'},
+                        {'label': '🟡 פומלית צהובה', 'value': 'פומלית צהובה'},
+                    ]
+                }
+            })
 
-    except Exception as e:
-        return jsonify({"success": False, "error": f"שגיאה: {str(e)}"}), 500
+        ctx['variety'] = variety
+        size = extract_size_from_text(user_message)
+        if size:
+            ctx['fruit_size'] = size
 
-# ===== Health =====
+    variety = ctx.get('variety')
 
-@app.route('/api/health', methods=['GET'])
+    sub_options = get_variety_options(variety)
+    if sub_options and not ctx.get('sub_variety'):
+        return jsonify({
+            'reply': f'איזה סוג של {variety}?',
+            'type': 'fruit_size',
+            'fruit_context': ctx,
+            'options': {
+                'question': 'sub_variety',
+                'choices': [{'label': f'📋 {s}', 'value': s} for s in sub_options]
+            }
+        })
+
+    sub_variety = ctx.get('sub_variety')
+
+    if not ctx.get('harvest_month'):
+        months = get_harvest_months(variety, sub_variety)
+        if not months:
+            return jsonify({
+                'reply': f'אין לי מידע על {variety}.',
+                'type': 'fruit_size',
+                'fruit_context': {}
+            })
+        if len(months) == 1:
+            ctx['harvest_month'] = months[0]
+        else:
+            return jsonify({
+                'reply': f'באיזה חודש אתה מתכנן לקטוף?',
+                'type': 'fruit_size',
+                'fruit_context': ctx,
+                'options': {
+                    'question': 'harvest_month',
+                    'choices': [{'label': f'📅 {m}', 'value': m} for m in months]
+                }
+            })
+
+    harvest_month = ctx['harvest_month']
+
+    if not ctx.get('fruit_size'):
+        size = extract_size_from_text(user_message)
+        if size:
+            ctx['fruit_size'] = size
+        else:
+            return jsonify({
+                'reply': f'מה הגודל של הפרי שלך כרגע (במ"מ)?',
+                'type': 'fruit_size',
+                'fruit_context': ctx
+            })
+
+    fruit_size = ctx['fruit_size']
+
+    today = datetime.now()
+    result = find_closest_dates(variety, sub_variety, harvest_month, today.month, today.day)
+
+    if not result or (not result['before'] and not result['after']):
+        return jsonify({
+            'reply': f'אין נתונים בטבלה לתאריך הנוכחי עבור {variety} - {harvest_month}.',
+            'type': 'fruit_size',
+            'fruit_context': {},
+            'show_followup': True
+        })
+
+    today_str = today.strftime('%d/%m/%Y')
+    variety_full = f"{variety} ({sub_variety})" if sub_variety else variety
+
+    reply = f"📊 **{variety_full} — קטיף {harvest_month}**\n"
+    reply += f"תאריך היום: {today_str}\n"
+    reply += f"הפרי שלך: **{fruit_size} מ\"מ**\n\n"
+
+    if result['before']:
+        (m, d), mn, mx = result['before']
+        reply += f"📅 לפי ה-{format_date_he(m, d)}: הטווח הרצוי **{mn}-{mx} מ\"מ**\n"
+    if result['after']:
+        (m, d), mn, mx = result['after']
+        if result['before'] != result['after']:
+            reply += f"📅 לפי ה-{format_date_he(m, d)}: הטווח הרצוי **{mn}-{mx} מ\"מ**\n"
+
+    reply += "\n"
+
+    relevant = result['before'] if result['before'] else result['after']
+    _, mn, mx = relevant
+
+    if fruit_size < mn:
+        status = f"🔴 **הפרי שלך מתחת לטווח המומלץ**"
+    elif fruit_size > mx:
+        status = f"🟠 **הפרי שלך מעל הטווח המומלץ**"
+    else:
+        status = f"🟢 **הפרי שלך בטווח המומלץ**"
+
+    reply += f"{status}\n\n"
+    reply += DISCLAIMER
+
+    return jsonify({
+        'reply': reply,
+        'type': 'fruit_size',
+        'fruit_context': {},
+        'show_followup': True
+    })
+
+@app.route('/fruit_select', methods=['POST'])
+def fruit_select():
+    data = request.json
+    question = data.get('question')
+    value = data.get('value')
+    ctx = data.get('fruit_context', {})
+
+    if question == 'variety_type':
+        ctx['variety'] = value
+    elif question == 'sub_variety':
+        ctx['sub_variety'] = value
+    elif question == 'harvest_month':
+        ctx['harvest_month'] = value
+
+    ctx['active'] = True
+    return handle_fruit_size("", ctx, [])
+
+@app.route('/health', methods=['GET'])
 def health():
     return jsonify({
-        "success": True, "status": "healthy",
-        "total_varieties": len(FRUIT_SIZES_DATA),
-        "total_pests": len(PESTS_AND_TREATMENTS),
+        'status': 'ok',
+        'message': 'עוזרת הפרדס פעילה',
+        'version': '4.1',
+        'features': ['general', 'shoham', 'granot', 'fruit_size'],
+        'varieties': len(FRUIT_SIZE_DB),
+        'labels_count': len(LABELS)
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
